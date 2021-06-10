@@ -16,15 +16,8 @@ SRC_URI += "\
     file://0002-Fix-build-with-non-glibc-libc-on-musl.patch \
     file://0003-Fix-build-bug-for-armv32-BE.patch \
     file://0004-PlatformQt.cmake-Do-not-generate-hardcoded-include-p.patch \
-    file://0005-Fix-build-with-bison37.patch \
-    file://0006-Disable-code-related-to-HTTP-2-when-Qt-is-configured.patch \
-    file://0007-Fix-compilation-with-Python-3.9-avoid-passing-encodi.patch \
     file://0008-Fix-build-with-icu-68.patch \
-    file://0009-Riscv-Add-support-for-riscv.patch \
 "
-
-SRC_URI_append_riscv32 = " file://0010-webdriver-libatomic.patch "
-SRC_URI_append_riscv64 = " file://0010-webdriver-libatomic.patch "
 
 inherit cmake_qt5 perlnative
 
