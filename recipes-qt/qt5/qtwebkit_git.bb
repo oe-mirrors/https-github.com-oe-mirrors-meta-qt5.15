@@ -19,7 +19,7 @@ SRC_URI += "\
     file://0008-Fix-build-with-icu-68.patch \
 "
 
-inherit cmake_qt5 perlnative
+inherit cmake_qt5 perlnative pkgconfig
 
 inherit python3native
 
