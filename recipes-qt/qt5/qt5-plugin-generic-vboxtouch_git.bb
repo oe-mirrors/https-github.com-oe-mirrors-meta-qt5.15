@@ -16,7 +16,7 @@ DEPENDS = "qtbase"
 # Needed with gcc-5.2 https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65801
 CXXFLAGS += "-Wno-narrowing"
 
-SRC_URI = "git://github.com/nemomobile/qt5-plugin-generic-vboxtouch.git \
+SRC_URI = "git://github.com/nemomobile/qt5-plugin-generic-vboxtouch.git;protocol=https;branch=master \
            file://0001-VirtualboxTouchScreenHandler-initialize-m_mouse.patch;patchdir=.. \
            file://0001-include-errno.h-for-errno-definition.patch;patchdir=.. \
            "
