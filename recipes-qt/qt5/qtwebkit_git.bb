@@ -1,7 +1,7 @@
 require qt5.inc
 require qt5-git.inc
 
-LICENSE = "BSD & LGPLv2+ | GPL-2.0"
+LICENSE = "BSD-3-Clause & LGPL-2.0-or-later | GPL-2.0-only"
 LIC_FILES_CHKSUM = " \
     file://LICENSE.LGPLv21;md5=58a180e1cf84c756c29f782b3a485c29 \
     file://Source/JavaScriptCore/parser/Parser.h;endline=21;md5=bd69f72183a7af673863f057576e21ee \
@@ -16,10 +16,16 @@ SRC_URI += "\
     file://0002-Fix-build-with-non-glibc-libc-on-musl.patch \
     file://0003-Fix-build-bug-for-armv32-BE.patch \
     file://0004-PlatformQt.cmake-Do-not-generate-hardcoded-include-p.patch \
+    file://0005-Fix-build-with-bison37.patch \
+    file://0006-Disable-code-related-to-HTTP-2-when-Qt-is-configured.patch \
+    file://0007-Fix-compilation-with-Python-3.9-avoid-passing-encodi.patch \
     file://0008-Fix-build-with-icu-68.patch \
+    file://0009-Riscv-Add-support-for-riscv.patch \
+    file://mips-atomic.patch \
+    file://disable_qttestbrowser.patch \
 "
 
-inherit cmake_qt5 perlnative
+inherit cmake_qt5 perlnative pkgconfig
 
 inherit python3native
 
@@ -42,6 +48,7 @@ ARM_INSTRUCTION_SET:armv7ve = "thumb"
 # just use -fpermissive in this case like fedora did:
 # https://bugzilla.redhat.com/show_bug.cgi?id=1582954
 CXXFLAGS += "-fpermissive"
+CXXFLAGS += "${@bb.utils.contains('DISTRO_FEATURES', 'x11', '', '-DEGL_NO_X11=1', d)}"
 
 EXTRA_OECMAKE += " \
     -DPORT=Qt \
