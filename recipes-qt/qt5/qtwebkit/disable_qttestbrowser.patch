@@ -1,0 +1,10 @@
+--- a/Tools/PlatformQt.cmake	2022-10-08 13:04:37.375357208 +0000
++++ b/Tools/PlatformQt.cmake	2022-10-08 13:04:54.451371694 +0000
+@@ -1,6 +1,6 @@
+ remove_definitions(-DQT_ASCII_CAST_WARNINGS)
+ 
+-add_subdirectory(QtTestBrowser)
++#add_subdirectory(QtTestBrowser)
+ 
+ if (ENABLE_TEST_SUPPORT)
+     add_subdirectory(DumpRenderTree)
