@@ -69,6 +69,7 @@ EXTRA_OECMAKE:append:mipsarch = " -DENABLE_JIT=OFF -DUSE_SYSTEM_MALLOC=ON -DENAB
 EXTRA_OECMAKE:append:powerpc = " -DENABLE_JIT=OFF -DUSE_SYSTEM_MALLOC=ON -DENABLE_C_LOOP=ON "
 EXTRA_OECMAKE:append:powerpc64le = " -DENABLE_JIT=OFF -DUSE_SYSTEM_MALLOC=ON -DENABLE_C_LOOP=ON "
 EXTRA_OECMAKE:append:riscv64 = " -DENABLE_JIT=OFF -DUSE_SYSTEM_MALLOC=ON -DENABLE_C_LOOP=ON "
+EXTRA_OECMAKE:append:arm = " -DENABLE_JIT=OFF -DUSE_SYSTEM_MALLOC=ON -DENABLE_C_LOOP=ON "
 
 # Disable gold on mips64/clang
 # mips64-yoe-linux-musl-ld.gold: internal error in get_got_page_offset, at ../../gold/mips.cc:6260
