@@ -131,7 +131,9 @@ do_configure:prepend:libc-musl() {
 do_compile[progress] = "outof:^\[(\d+)/(\d+)\]\s+"
 
 do_install:append() {
-    sed -i 's@ -Wl,--start-group.*-Wl,--end-group@@g; s@[^ ]*${B}[^ ]* @@g' ${D}${libdir}/pkgconfig/Qt5WebEngineCore.pc
+    if [ -e ${D}${libdir}/pkgconfig/Qt5WebEngineCore.pc ]; then
+        sed -i 's@ -Wl,--start-group.*-Wl,--end-group@@g; s@[^ ]*${B}[^ ]* @@g' ${D}${libdir}/pkgconfig/Qt5WebEngineCore.pc
+    fi
 }
 
 # for /usr/share/qt5/qtwebengine_resources.pak
