@@ -14,7 +14,7 @@ SRC_URI = " \
     file://${BPN}.conf \
 "
 
-PV = "0.0+git${SRCPV}"
+PV = "0.0+git"
 SRCREV = "d42b7d9050b5445e2b9430022a46d5d583581631"
 
 S = "${WORKDIR}/git"

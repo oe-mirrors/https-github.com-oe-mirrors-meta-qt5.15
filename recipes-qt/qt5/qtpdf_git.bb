@@ -131,7 +131,7 @@ RDEPENDS:${PN}-examples += " \
 QT_MODULE_BRANCH_CHROMIUM = "87-based"
 
 QT_MODULE_BRANCH = "5.15"
-PV = "5.15.13+git${SRCPV}"
+PV = "5.15.13+git"
 
 # Uses the same repository and couple patches as qtwebengine, but qtwebengine
 # still depends on python2

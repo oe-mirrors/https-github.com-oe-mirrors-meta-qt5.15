@@ -151,7 +151,7 @@ RDEPENDS:${PN}-examples += " \
 QT_MODULE_BRANCH_CHROMIUM = "87-based"
 
 QT_MODULE_BRANCH = "5.15"
-PV = "5.15.13+git${SRCPV}"
+PV = "5.15.13+git"
 
 # Patches from https://github.com/meta-qt5/qtwebengine/commits/b5.15-glibc
 # 5.15-glibc.meta-qt5.17

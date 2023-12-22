@@ -12,7 +12,7 @@ DEPENDS += "qtbase qtdeclarative qtquickcontrols2"
 QT_MODULE_BRANCH = "master"
 QT_MODULE_BRANCH_EASTL = "master"
 QT_GIT_PROJECT = "qt3dstudio"
-PV = "2.8.0+git${SRCPV}"
+PV = "2.8.0+git"
 
 COMPATIBLE_HOST = "(i.86|x86_64|aarch64|arm|powerpc64).*-linux"
 
