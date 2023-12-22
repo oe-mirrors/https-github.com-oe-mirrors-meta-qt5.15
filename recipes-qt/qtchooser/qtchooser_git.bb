@@ -10,7 +10,7 @@ LIC_FILES_CHKSUM = " \
 "
 S = "${WORKDIR}/git"
 SRCREV = "71750df4f0c6bbadcd422cdf7fe360ad033bbd14"
-PV = "39+git${SRCPV}"
+PV = "39+git"
 
 inherit pkgconfig
 

@@ -9,9 +9,6 @@ SRC_URI = "git://github.com/vinipsmaker/tufao.git;protocol=http;branch=1.x;proto
     file://0001-CMakeLists.txt-fix-build-with-Qt-5.11-don-t-use-qt5_.patch \
 "
 
-# This includes bugfixes from 1.x branch
-PV:append = "+${SRCPV}"
-
 S = "${WORKDIR}/git"
 
 inherit cmake_qt5
