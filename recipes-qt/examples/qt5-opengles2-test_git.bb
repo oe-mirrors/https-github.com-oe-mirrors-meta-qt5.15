@@ -5,7 +5,7 @@ focus handling and some other game-related features."
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/git/main.cpp;beginline=1;endline=26;md5=93b83ece006c9e76b9fca80c3aecb169"
 
-PV = "1.0.4+git"
+PV = "1.0.4+gitr${SRCPV}"
 
 DEPENDS = "qtbase qtsensors"
 

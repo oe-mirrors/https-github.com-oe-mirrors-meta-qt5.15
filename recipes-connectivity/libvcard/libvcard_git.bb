@@ -8,7 +8,7 @@ DEPENDS += "qtbase"
 SRCREV = "4250e2468552ea01954244a2d9cd5d2b44b00042"
 SRC_URI = "git://github.com/pol51/libvcard.git;protocol=https;branch=master"
 
-PV = "1.0+git"
+PV = "1.0+gitr${SRCPV}"
 
 S = "${WORKDIR}/git"
 

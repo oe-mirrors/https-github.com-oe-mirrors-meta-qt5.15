@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = " \
     file://evdevmousehandler.cpp;beginline=1;endline=40;md5=9081062f6e7f74b6e62ad7ecee4a71be \
 "
 
-PV = "1.1.4+git"
+PV = "1.1.4+gitr${SRCPV}"
 
 DEPENDS = "qtbase"
 

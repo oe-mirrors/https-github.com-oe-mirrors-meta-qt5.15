@@ -17,7 +17,7 @@ SRC_URI = "git://github.com/maliit/plugins.git;branch=master;protocol=https \
           "
 
 SRCREV = "c6a348592607248a771a3dde5a0e33dc3c433a2a"
-PV = "0.99.0+git"
+PV = "0.99.0+git${SRCPV}"
 
 EXTRA_QMAKEVARS_PRE = "\
     PREFIX=${prefix} \

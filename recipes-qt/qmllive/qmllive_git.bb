@@ -4,7 +4,7 @@ LICENSE = "GPL-3.0-only"
 LIC_FILES_CHKSUM = "file://LICENSE.GPL3;md5=75cd0dbc6f2d24e7eeb128ff59b74f4c"
 DEPENDS = "qtbase qtdeclarative"
 
-PV = "5.12+git"
+PV = "5.12+git${SRCPV}"
 
 QT_GIT_PROJECT = "qt-apps"
 SRC_URI = "${QT_GIT}/qmllive.git;branch=dev \

@@ -16,7 +16,7 @@ SRC_URI = "git://github.com/maliit/framework.git;branch=master;protocol=https \
            "
 
 SRCREV = "60b1b10de14f932420313c547ab801daf522d539"
-PV = "0.99.0+git"
+PV = "0.99.0+git${SRCPV}"
 
 
 PACKAGES =+ "${PN}-gtk"

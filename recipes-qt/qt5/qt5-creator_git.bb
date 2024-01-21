@@ -18,7 +18,7 @@ DEPENDS += "qtbase qtscript qtxmlpatterns qtx11extras qtdeclarative qttools qtto
 DEPENDS:append:libc-musl = " libexecinfo"
 
 SRCREV = "39ac7b1bf6add473026687003311b702742b6b21"
-PV = "4.15.2+git"
+PV = "4.15.2+git${SRCPV}"
 # Patches from https://github.com/meta-qt5/qtcreator/commits/b4.9.2
 # 4.9.2.meta-qt5.1
 SRC_URI = " \
