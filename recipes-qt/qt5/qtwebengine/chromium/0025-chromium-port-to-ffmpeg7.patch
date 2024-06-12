@@ -1,0 +1,245 @@
+From 9628ecc2a34be3c5b8867cc2649d66cd85a53dde Mon Sep 17 00:00:00 2001
+From: NickerSK <nickersk@gmail.com>
+Date: Tue, 11 Jun 2024 16:49:49 +0200
+Subject: [PATCH] chromium port to ffmpeg7
+
+---
+ chromium/media/ffmpeg/ffmpeg_common.cc               | 10 +++++-----
+ chromium/media/filters/audio_file_reader.cc          | 12 ++++++------
+ .../media/filters/ffmpeg_aac_bitstream_converter.cc  |  6 +++---
+ chromium/media/filters/ffmpeg_audio_decoder.cc       | 12 ++++++------
+ chromium/media/filters/ffmpeg_video_decoder.cc       |  8 ++++----
+ .../video_coding/codecs/h264/h264_decoder_impl.cc    |  6 ------
+ 6 files changed, 24 insertions(+), 30 deletions(-)
+
+diff --git a/chromium/media/ffmpeg/ffmpeg_common.cc b/chromium/media/ffmpeg/ffmpeg_common.cc
+index c17dd9f8371..d6f3de85657 100644
+--- a/chromium/media/ffmpeg/ffmpeg_common.cc
++++ b/chromium/media/ffmpeg/ffmpeg_common.cc
+@@ -341,10 +341,10 @@ bool AVCodecContextToAudioDecoderConfig(const AVCodecContext* codec_context,
+       codec_context->sample_fmt, codec_context->codec_id);
+ 
+   ChannelLayout channel_layout =
+-      codec_context->channels > 8
++      codec_context->ch_layout.nb_channels > 8
+           ? CHANNEL_LAYOUT_DISCRETE
+-          : ChannelLayoutToChromeChannelLayout(codec_context->channel_layout,
+-                                               codec_context->channels);
++          : ChannelLayoutToChromeChannelLayout(codec_context->ch_layout.u.mask,
++                                               codec_context->ch_layout.nb_channels);
+ 
+   int sample_rate = codec_context->sample_rate;
+   switch (codec) {
+@@ -397,7 +397,7 @@ bool AVCodecContextToAudioDecoderConfig(const AVCodecContext* codec_context,
+                      extra_data, encryption_scheme, seek_preroll,
+                      codec_context->delay);
+   if (channel_layout == CHANNEL_LAYOUT_DISCRETE)
+-    config->SetChannelsForDiscrete(codec_context->channels);
++    config->SetChannelsForDiscrete(codec_context->ch_layout.nb_channels);
+ 
+ #if BUILDFLAG(ENABLE_PLATFORM_AC3_EAC3_AUDIO)
+   // These are bitstream formats unknown to ffmpeg, so they don't have
+@@ -462,7 +462,7 @@ void AudioDecoderConfigToAVCodecContext(const AudioDecoderConfig& config,
+ 
+   // TODO(scherkus): should we set |channel_layout|? I'm not sure if FFmpeg uses
+   // said information to decode.
+-  codec_context->channels = config.channels();
++  codec_context->ch_layout.nb_channels = config.channels();
+   codec_context->sample_rate = config.samples_per_second();
+ 
+   if (config.extra_data().empty()) {
+diff --git a/chromium/media/filters/audio_file_reader.cc b/chromium/media/filters/audio_file_reader.cc
+index bd73908d0ca..2af25400c98 100644
+--- a/chromium/media/filters/audio_file_reader.cc
++++ b/chromium/media/filters/audio_file_reader.cc
+@@ -112,14 +112,14 @@ bool AudioFileReader::OpenDecoder() {
+ 
+   // Verify the channel layout is supported by Chrome.  Acts as a sanity check
+   // against invalid files.  See http://crbug.com/171962
+-  if (ChannelLayoutToChromeChannelLayout(codec_context_->channel_layout,
+-                                         codec_context_->channels) ==
++  if (ChannelLayoutToChromeChannelLayout(codec_context_->ch_layout.u.mask,
++                                         codec_context_->ch_layout.nb_channels) ==
+       CHANNEL_LAYOUT_UNSUPPORTED) {
+     return false;
+   }
+ 
+   // Store initial values to guard against midstream configuration changes.
+-  channels_ = codec_context_->channels;
++  channels_ = codec_context_->ch_layout.nb_channels;
+   audio_codec_ = CodecIDToAudioCodec(codec_context_->codec_id);
+   sample_rate_ = codec_context_->sample_rate;
+   av_sample_format_ = codec_context_->sample_fmt;
+@@ -222,7 +222,7 @@ bool AudioFileReader::OnNewFrame(
+   if (frames_read < 0)
+     return false;
+ 
+-  const int channels = frame->channels;
++  const int channels = frame->ch_layout.nb_channels;
+   if (frame->sample_rate != sample_rate_ || channels != channels_ ||
+       frame->format != av_sample_format_) {
+     DLOG(ERROR) << "Unsupported midstream configuration change!"
+@@ -241,10 +241,10 @@ bool AudioFileReader::OnNewFrame(
+   // silence from being output. In the case where we are also discarding some
+   // portion of the packet (as indicated by a negative pts), we further want to
+   // adjust the duration downward by however much exists before zero.
+-  if (audio_codec_ == kCodecAAC && frame->pkt_duration) {
++  if (audio_codec_ == kCodecAAC && frame->duration) {
+     const base::TimeDelta pkt_duration = ConvertFromTimeBase(
+         glue_->format_context()->streams[stream_index_]->time_base,
+-        frame->pkt_duration + std::min(static_cast<int64_t>(0), frame->pts));
++        frame->duration + std::min(static_cast<int64_t>(0), frame->pts));
+     const base::TimeDelta frame_duration = base::TimeDelta::FromSecondsD(
+         frames_read / static_cast<double>(sample_rate_));
+ 
+diff --git a/chromium/media/filters/ffmpeg_aac_bitstream_converter.cc b/chromium/media/filters/ffmpeg_aac_bitstream_converter.cc
+index 6f231c85729..f58548e1341 100644
+--- a/chromium/media/filters/ffmpeg_aac_bitstream_converter.cc
++++ b/chromium/media/filters/ffmpeg_aac_bitstream_converter.cc
+@@ -195,14 +195,14 @@ bool FFmpegAACBitstreamConverter::ConvertPacket(AVPacket* packet) {
+   if (!header_generated_ || codec_ != stream_codec_parameters_->codec_id ||
+       audio_profile_ != stream_codec_parameters_->profile ||
+       sample_rate_index_ != sample_rate_index ||
+-      channel_configuration_ != stream_codec_parameters_->channels ||
++      channel_configuration_ != stream_codec_parameters_->ch_layout.nb_channels ||
+       frame_length_ != header_plus_packet_size) {
+     header_generated_ =
+         GenerateAdtsHeader(stream_codec_parameters_->codec_id,
+                            0,  // layer
+                            stream_codec_parameters_->profile, sample_rate_index,
+                            0,  // private stream
+-                           stream_codec_parameters_->channels,
++                           stream_codec_parameters_->ch_layout.nb_channels,
+                            0,  // originality
+                            0,  // home
+                            0,  // copyrighted_stream
+@@ -214,7 +214,7 @@ bool FFmpegAACBitstreamConverter::ConvertPacket(AVPacket* packet) {
+     codec_ = stream_codec_parameters_->codec_id;
+     audio_profile_ = stream_codec_parameters_->profile;
+     sample_rate_index_ = sample_rate_index;
+-    channel_configuration_ = stream_codec_parameters_->channels;
++    channel_configuration_ = stream_codec_parameters_->ch_layout.nb_channels;
+     frame_length_ = header_plus_packet_size;
+   }
+ 
+diff --git a/chromium/media/filters/ffmpeg_audio_decoder.cc b/chromium/media/filters/ffmpeg_audio_decoder.cc
+index 72fac6167ef..aafa4293a03 100644
+--- a/chromium/media/filters/ffmpeg_audio_decoder.cc
++++ b/chromium/media/filters/ffmpeg_audio_decoder.cc
+@@ -27,7 +27,7 @@ namespace media {
+ 
+ // Return the number of channels from the data in |frame|.
+ static inline int DetermineChannels(AVFrame* frame) {
+-  return frame->channels;
++  return frame->ch_layout.nb_channels;
+ }
+ 
+ // Called by FFmpeg's allocation routine to allocate a buffer. Uses
+@@ -227,7 +227,7 @@ bool FFmpegAudioDecoder::OnNewFrame(const DecoderBuffer& buffer,
+   // Translate unsupported into discrete layouts for discrete configurations;
+   // ffmpeg does not have a labeled discrete configuration internally.
+   ChannelLayout channel_layout = ChannelLayoutToChromeChannelLayout(
+-      codec_context_->channel_layout, codec_context_->channels);
++      codec_context_->ch_layout.u.mask, codec_context_->ch_layout.nb_channels);
+   if (channel_layout == CHANNEL_LAYOUT_UNSUPPORTED &&
+       config_.channel_layout() == CHANNEL_LAYOUT_DISCRETE) {
+     channel_layout = CHANNEL_LAYOUT_DISCRETE;
+@@ -344,11 +344,11 @@ bool FFmpegAudioDecoder::ConfigureDecoder(const AudioDecoderConfig& config) {
+   // Success!
+   av_sample_format_ = codec_context_->sample_fmt;
+ 
+-  if (codec_context_->channels != config.channels()) {
++  if (codec_context_->ch_layout.nb_channels != config.channels()) {
+     MEDIA_LOG(ERROR, media_log_)
+         << "Audio configuration specified " << config.channels()
+         << " channels, but FFmpeg thinks the file contains "
+-        << codec_context_->channels << " channels";
++        << codec_context_->ch_layout.nb_channels << " channels";
+     ReleaseFFmpegResources();
+     state_ = kUninitialized;
+     return false;
+@@ -398,7 +398,7 @@ int FFmpegAudioDecoder::GetAudioBuffer(struct AVCodecContext* s,
+   if (frame->nb_samples <= 0)
+     return AVERROR(EINVAL);
+ 
+-  if (s->channels != channels) {
++  if (s->ch_layout.nb_channels != channels) {
+     DLOG(ERROR) << "AVCodecContext and AVFrame disagree on channel count.";
+     return AVERROR(EINVAL);
+   }
+@@ -431,7 +431,7 @@ int FFmpegAudioDecoder::GetAudioBuffer(struct AVCodecContext* s,
+   ChannelLayout channel_layout =
+       config_.channel_layout() == CHANNEL_LAYOUT_DISCRETE
+           ? CHANNEL_LAYOUT_DISCRETE
+-          : ChannelLayoutToChromeChannelLayout(s->channel_layout, s->channels);
++          : ChannelLayoutToChromeChannelLayout(s->ch_layout.u.mask, s->ch_layout.nb_channels);
+ 
+   if (channel_layout == CHANNEL_LAYOUT_UNSUPPORTED) {
+     DLOG(ERROR) << "Unsupported channel layout.";
+diff --git a/chromium/media/filters/ffmpeg_video_decoder.cc b/chromium/media/filters/ffmpeg_video_decoder.cc
+index 7996606f5f9..16860b11b0b 100644
+--- a/chromium/media/filters/ffmpeg_video_decoder.cc
++++ b/chromium/media/filters/ffmpeg_video_decoder.cc
+@@ -183,7 +183,7 @@ int FFmpegVideoDecoder::GetVideoBuffer(struct AVCodecContext* codec_context,
+   frame->width = coded_size.width();
+   frame->height = coded_size.height();
+   frame->format = codec_context->pix_fmt;
+-  frame->reordered_opaque = codec_context->reordered_opaque;
++//  frame->reordered_opaque = codec_context->reordered_opaque;
+ 
+   // Now create an AVBufferRef for the data just allocated. It will own the
+   // reference to the VideoFrame object.
+@@ -319,7 +319,7 @@ bool FFmpegVideoDecoder::FFmpegDecode(const DecoderBuffer& buffer) {
+     DCHECK_GT(packet.size, 0);
+ 
+     // Let FFmpeg handle presentation timestamp reordering.
+-    codec_context_->reordered_opaque = buffer.timestamp().InMicroseconds();
++//    codec_context_->reordered_opaque = buffer.timestamp().InMicroseconds();
+   }
+ 
+   switch (decoding_loop_->DecodePacket(
+@@ -358,8 +358,8 @@ bool FFmpegVideoDecoder::OnNewFrame(AVFrame* frame) {
+ 
+   scoped_refptr<VideoFrame> video_frame =
+       reinterpret_cast<VideoFrame*>(av_buffer_get_opaque(frame->buf[0]));
+-  video_frame->set_timestamp(
+-      base::TimeDelta::FromMicroseconds(frame->reordered_opaque));
++//  video_frame->set_timestamp(
++//      base::TimeDelta::FromMicroseconds(frame->reordered_opaque));
+   video_frame->metadata()->power_efficient = false;
+   output_cb_.Run(video_frame);
+   return true;
+diff --git a/chromium/third_party/webrtc/modules/video_coding/codecs/h264/h264_decoder_impl.cc b/chromium/third_party/webrtc/modules/video_coding/codecs/h264/h264_decoder_impl.cc
+index d12fade8b63..a9d344240c9 100644
+--- a/chromium/third_party/webrtc/modules/video_coding/codecs/h264/h264_decoder_impl.cc
++++ b/chromium/third_party/webrtc/modules/video_coding/codecs/h264/h264_decoder_impl.cc
+@@ -114,7 +114,6 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
+   int total_size = y_size + 2 * uv_size;
+ 
+   av_frame->format = context->pix_fmt;
+-  av_frame->reordered_opaque = context->reordered_opaque;
+ 
+   // Set |av_frame| members as required by FFmpeg.
+   av_frame->data[kYPlaneIndex] = frame_buffer->MutableDataY();
+@@ -274,7 +273,6 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
+   }
+   packet.size = static_cast<int>(input_image.size());
+   int64_t frame_timestamp_us = input_image.ntp_time_ms_ * 1000;  // ms -> μs
+-  av_context_->reordered_opaque = frame_timestamp_us;
+ 
+   int result = avcodec_send_packet(av_context_.get(), &packet);
+   if (result < 0) {
+@@ -290,10 +288,6 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
+     return WEBRTC_VIDEO_CODEC_ERROR;
+   }
+ 
+-  // We don't expect reordering. Decoded frame tamestamp should match
+-  // the input one.
+-  RTC_DCHECK_EQ(av_frame_->reordered_opaque, frame_timestamp_us);
+-
+   absl::optional<uint8_t> qp;
+   // TODO(sakal): Maybe it is possible to get QP directly from FFmpeg.
+   h264_bitstream_parser_.ParseBitstream(input_image.data(), input_image.size());
+-- 
+2.43.0
+
