@@ -1,0 +1,11 @@
+--- a/Source/cmake/OptionsCommon.cmake	2024-09-18 10:40:25.300581910 +0000
++++ b/Source/cmake/OptionsCommon.cmake	2024-09-18 10:40:37.772446773 +0000
+@@ -31,7 +31,7 @@
+ if (COMPILER_IS_GCC_OR_CLANG)
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-strict-aliasing")
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-strict-aliasing -fno-rtti")
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+ endif ()
+ 
+ if (COMPILER_IS_CLANG AND CMAKE_GENERATOR STREQUAL "Ninja")
